@@ -13,8 +13,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import ec.edu.ug.erp.util.constantes.IConstantes;
 
-public class JSFUtils {
+
+public class JSFUtils implements IConstantes {
 	
 	public static FacesContext getFacesContext() {
 		return FacesContext.getCurrentInstance();
@@ -48,7 +50,7 @@ public class JSFUtils {
 	}
 	
 	public static <T> T findManagedBean(String managedBeanName, Class<T> beanClass){
-		return beanClass.cast(getApplication().evaluateExpressionGet(getFacesContext(), "#{"+managedBeanName+"}", beanClass));
+		return beanClass.cast(getApplication().evaluateExpressionGet(getFacesContext(), "#{".concat(managedBeanName).concat("}"), beanClass));
 	}
 
 	public static FacesMessage buildMessage(String _sumary, String _detail,
@@ -87,13 +89,13 @@ public class JSFUtils {
 		addMessage(_menssage, null);
 	}
 
-	public static void addMessajeInfo(String _message,
+	public static void addMessageInfo(String _message,
 			String _detail) {
 		addMessage(buildMessageInfo(_message,_detail));
 	}
 
 	public static void addMessageInfo(String pMensajeInformacion) {
-		addMessajeInfo(pMensajeInformacion, "");
+		addMessageInfo(pMensajeInformacion, "");
 	}
 
 	public static void addMessageInfoComponent(String _clientId,
@@ -107,7 +109,7 @@ public class JSFUtils {
 	}
 
 	public static void addMessageError(String _sumary, String _detail) {
-		addMessage(buildMessageInfo(_sumary, _detail));
+		addMessage(buildMessageError(_sumary, _detail));
 	}
 
 	public static void addMessageError(String _sumary) {
@@ -190,8 +192,7 @@ public class JSFUtils {
 	}
 
 	public static boolean isAutenticado() {
-		return ((HttpServletRequest) getFacesContext().getExternalContext()
-				.getRequest()).getUserPrincipal() != null;
+		return getHttpServletRequest()!=null && getHttpServletRequest().getUserPrincipal() != null;
 	}
 	
 	public static boolean isUserInRole(String pRol) {
@@ -247,4 +248,48 @@ public class JSFUtils {
 	public static void setContentTypeArchivoTexto(){
 		getHttpServletResponse().setContentType("application/txt");
 	}
+	
+	public void removeSessionBean(final String beanName) {
+		getFacesContext().getExternalContext().getSessionMap().remove(beanName);
+	}
+	
+	public void removeManagedBean(final String beanName) {
+	    FacesContext fc = FacesContext.getCurrentInstance();
+	    fc.getELContext().getELResolver().setValue(fc.getELContext(), null, beanName, null);
+	}
+	
+	public final Map<String, String> getParametersMap(){
+		return getFacesContext().getExternalContext().getRequestParameterMap();
+	}
+	
+	public final String getParameterValue(String parameterName){
+		return getParametersMap().get(parameterName);	
+	}
+	
+	public final Long getParameterLongValue(String parameterName){
+		String valorString = getParameterValue(parameterName);
+		if(valorString == null) return null;
+		return new Long(valorString);	
+	}
+	
+	public final Map<String, Object> getSessionMap(){
+		return getFacesContext().getExternalContext().getSessionMap();
+	}
+	
+
+	public final String getQueryString(){		
+		return getHttpServletRequest().getQueryString();
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected final <K> K getValueSession(String property, Class<K> Clazz){
+		return (K) getSessionMap().get(property);
+	}
+	
+	protected final <K> void putValueSession(String property, K value){
+		getSessionMap().put(property, value);
+	}
+
+	
+	
 }
